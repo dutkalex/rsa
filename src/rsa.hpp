@@ -1,120 +1,12 @@
-// RSA: R. Rivest, A. Shamir, L. Adleman
-
 #include <optional>
 #include <random>
 #include <tuple>
 #include <utility>
 
+#include "impl/power.hpp"
+#include "impl/gcd.hpp"
+
 namespace rsa::impl {
-    // Returns res op (elm pow n) where pow is the power operator associated to op
-    // Example: if op is '*' then the result is 'res * elm^n'
-    // Example: if op is '+' then the result is 'res + elm*n'
-    template<std::regular T, std::integral I, typename SemiGroupOperator>
-    T power_accumulate_semigroup(T res, T elm, I n, SemiGroupOperator op) {
-        // assumes n >= 0
-        if (n == I{0}) {
-            return res;
-        }
-
-        auto is_odd = [](T a) -> bool { return a % I{2} != 0; };
-        auto half = [](T a) -> T { return a / I{2}; };
-
-        while (true) {
-            if (is_odd(n)) {
-                res = op(res, elm);
-                if (n == I{1}) {
-                    return res;
-                }
-            }
-            n = half(n);
-            elm = op(elm, elm);
-        }
-    }
-
-    // Returns elm pow n where pow is the power operator associated to op
-    template<std::regular T, std::integral I, typename SemiGroupOperator>
-    T power_semigroup(T elm, I n, SemiGroupOperator op) {
-        // assumes n > 0
-        auto is_even = [](T a) -> bool { return a % I{2} == 0; };
-        auto half = [](T a) -> T { return a / I{2}; };
-
-        T res = elm;
-        I i = n;
-
-        while (is_even(i)) {
-            res = op(res, res);
-            i = half(i);
-        }
-
-        if (i == I{1}) {
-            return res;
-        }
-
-        return power_accumulate_semigroup(res, op(res, res), half(i), op);
-    }
-
-    template<std::regular T, std::integral I, typename MonoidOperator>
-    T power_monoid(T elm, I n, MonoidOperator op) {
-        // assumes n >=0
-        if (n == I{0}) {
-            return identity_element(op);
-        }
-
-        return power_semigroup(elm, n, op);
-    }
-
-    // Computes the greatest common divisor of a and b
-    // T must be a Euclidian domain for the algorithm to terminate
-    template<std::regular T>
-    T gcd(T a, T b) {
-        if (a < b) {
-            std::swap(a, b);
-        }
-
-        if (b == T{0}) {
-            return T{1};
-        }
-
-        while (true) {
-            a = a - b * (a / b);
-            if (a == T{0}) {
-                return b;
-            }
-
-            b = b - a * (b / a);
-            if (b == T{0}) {
-                return a;
-            }
-        }
-    }
-
-    // Computes the greatest common divisor of a and b and the multiplicative inverse of a modulo b if it exists
-    // T must be a Euclidian domain for the algorithm to terminate
-    template<std::regular T>
-    std::pair<T, T> extended_gcd(T a, T b) {
-        if (b == T{0}) {
-            return std::make_pair(T{1}, T{0});
-        }
-
-        T u = T{1};
-        T v = T{0};
-        while (true) {
-            T q = a / b;
-            a = a - q * b;
-            if (a == T{0}) {
-                return std::make_pair(b, v);
-            }
-            u = u - q * v;
-
-            q = b / a;
-            b = b - q * a;
-            if (b == T{0}) {
-                return std::make_pair(a, u);
-            }
-            v = v - q * u;
-        }
-    }
-
     // Returns the multiplicative inverse of a modulo n if it exists, 0 otherwise
     template<std::integral I>
     std::optional<I> multiplicative_inverse(I a, I n) {
@@ -291,6 +183,7 @@ namespace rsa::impl {
     }
 }  // namespace rsa::impl
 
+// RSA: R. Rivest, A. Shamir, L. Adleman
 namespace rsa {
     template<std::integral I>
     std::tuple<I, I, I> keygen() {
