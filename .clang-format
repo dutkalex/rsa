@@ -10,7 +10,7 @@ AlignTrailingComments: 'true'
 AlignAfterOpenBracket: BlockIndent
 AllowAllArgumentsOnNextLine: 'false'
 AllowAllConstructorInitializersOnNextLine: 'true'
-AllowShortFunctionsOnASingleLine: All
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: All
 AllowShortBlocksOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
@@ -21,8 +21,8 @@ NamespaceIndentation: All
 SortIncludes: 'false'
 SpaceAfterTemplateKeyword: 'false'
 SpaceInEmptyParentheses: 'false'
-SpacesInAngles: 'true'
-SpacesInParentheses: 'true'
+SpacesInAngles: 'false'
+SpacesInParentheses: 'false'
 Standard: Auto
 PenaltyBreakAssignment: 100
 PenaltyExcessCharacter: 10
