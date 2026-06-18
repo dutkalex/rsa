@@ -1,3 +1,5 @@
+#pragma once
+
 #include <optional>
 #include <random>
 #include <tuple>
@@ -5,18 +7,9 @@
 
 #include "impl/power.hpp"
 #include "impl/gcd.hpp"
+#include "impl/modulo_multiply.hpp"
 
 namespace rsa::impl {
-    // Returns the multiplicative inverse of a modulo n if it exists, 0 otherwise
-    template<std::integral I>
-    std::optional<I> multiplicative_inverse(I a, I n) {
-        auto [gcd, inverse] = extended_gcd(a, n);
-        if (gcd != I{1}) {
-            return std::nullopt;
-        }
-        return (inverse + n) % n;
-    }
-
     template<std::integral I>
     I smallest_divisor(I n) {
         // assumes n > 0
@@ -36,29 +29,6 @@ namespace rsa::impl {
     template<std::integral I>
     bool is_prime(I n) {
         return n > I{1} and smallest_divisor(n) == n;
-    }
-
-    template<std::integral I>
-    struct modulo_multiply {
-        I modulus;
-
-        I operator()(I lhs, I rhs) const {
-            return (lhs * rhs) % modulus;
-        }
-    };
-
-    template<std::integral I>
-    I identity_element(modulo_multiply<I>) {
-        return I{1};
-    }
-
-    // Returns the multiplicative inverse of elm modulo p, with p a prime
-    template<std::integral I>
-    I multiplicative_inverse_prime(I elm, I p) {
-        // assumes e > 0 and p is prime
-        // relies on the fact that (e^(p-1)) % p = 1
-        auto op = modulo_multiply<I>{p};
-        return power_monoid(elm, p - 2, op);
     }
 
     template<std::integral I>
