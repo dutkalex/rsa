@@ -8,59 +8,10 @@
 #include "impl/power.hpp"
 #include "impl/gcd.hpp"
 #include "impl/modulo_multiply.hpp"
+#include "impl/prime.hpp"
 
 namespace rsa::impl {
-    template<std::integral I>
-    I smallest_divisor(I n) {
-        // assumes n > 0
-        if (n % I{2} == 0) {
-            return I{2};
-        }
-
-        for (auto i = I{3}; i * i <= n; i += I{2}) {
-            if (n % i == 0) {
-                return i;
-            }
-        }
-
-        return n;
-    }
-
-    template<std::integral I>
-    bool is_prime(I n) {
-        return n > I{1} and smallest_divisor(n) == n;
-    }
-
-    template<std::integral I>
-    bool fermat_test(I n, I witness) {
-        // assumes 0 < witness < n
-        auto op = modulo_multiply<I>{n};
-        return power_semigroup(witness, n - 1, op) == I{1};
-    }
-
-    // Determines whether n is prime with at least 75% accuracy
-    // Repeating the test with 100 different witness values brings the error
-    // probability below 1/2^200, which renders the test deterministic for practical
-    // puporses (see Knuth).
-    // n must be odd and greater than 1
-    // q and k must be such that n-1 = q * 2^k, with q odd
-    template<std::integral I>
-    bool miller_rabin_test(I n, I q, I k, I witness) {
-        auto op = modulo_multiply<I>{n};
-        I x = power_semigroup(witness, q, op);
-        I i = I{1};
-        while (x != I{1} and x != n - I{1}) {
-            // invariant: x = w^(q * 2^i)
-            ++i;
-            if (i >= k) {
-                return false;
-            }
-            x = op(x, x);
-        }
-
-        return x != 1 or i == 1;
-    }
-
+    // Uniform distribution number generator
     template<std::integral I>
     class RandomGenerator {
       private:
@@ -134,6 +85,7 @@ namespace rsa::impl {
         return std::pair{prime1, prime2};
     }
 
+    // Generates a number which is coprime with n in the range [2, n-1]
     template<std::integral I>
     I generate_random_coprime(I n, std::optional<int> seed = std::nullopt) {
         if (not seed) {
@@ -158,7 +110,7 @@ namespace rsa {
     template<std::integral I>
     std::tuple<I, I, I> keygen() {
         I floor = 10;
-        I ceiling = static_cast<I>(std::pow(std::numeric_limits<I>::max(), 0.25));  //
+        I ceiling = static_cast<I>(std::pow(std::numeric_limits<I>::max(), 0.25));
         auto [prime1, prime2] = impl::generate_random_pair_of_distinct_primes(floor, ceiling);
         I n = prime1 * prime2;
         I phi_n = (prime1 - 1) * (prime2 - 1);

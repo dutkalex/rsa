@@ -21,6 +21,11 @@ target_sources(decrypt PRIVATE src/decrypt.cpp)
 target_link_libraries(decrypt PRIVATE rsa)
 
 if (RSA_ENABLE_TESTS)
+    add_executable(bigint_test)
+    target_sources(bigint_test PRIVATE test/bigint.cpp)
+    target_link_libraries(bigint_test PRIVATE rsa)
+    add_test(NAME bigint_test COMMAND ./bigint_test)
+
     add_executable(primegen_test)
     target_sources(primegen_test PRIVATE test/primegen.cpp)
     target_link_libraries(primegen_test PRIVATE rsa)
