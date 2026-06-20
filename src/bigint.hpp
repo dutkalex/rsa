@@ -70,6 +70,15 @@ namespace rsa {
       private:
         std::array<std::byte, N> raw_;
 
+        [[nodiscard]] bool is_zero() const {
+            for (auto byte : raw_) {
+                if (std::to_integer<unsigned>(byte) != 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         [[nodiscard]] bool is_negative() const {
             return std::to_integer<unsigned>(raw_[N - 1]) >= 128;
         }
@@ -131,6 +140,21 @@ namespace rsa {
             bigint tmp = -other;
             impl::le_tc_add(raw_, tmp.raw_, raw_);
             return *this;
+        }
+
+        friend std::strong_ordering operator<=>(bigint const& lhs, bigint const& rhs) {
+            auto diff = lhs - rhs;
+            if (diff.is_negative()) {
+                return std::strong_ordering::less;
+            }
+            if (diff.is_zero()) {
+                return std::strong_ordering::equal;
+            }
+            return std::strong_ordering::greater;
+        }
+
+        friend bool operator==(bigint const& lhs, bigint const& rhs) {
+            return (lhs <=> rhs) == std::strong_ordering::equal;
         }
 
         [[nodiscard]] std::string to_string() const {
