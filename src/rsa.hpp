@@ -5,6 +5,8 @@
 #include <tuple>
 #include <utility>
 
+#include "concepts.hpp"
+
 #include "impl/power.hpp"
 #include "impl/gcd.hpp"
 #include "impl/modulo_multiply.hpp"
@@ -12,7 +14,7 @@
 
 namespace rsa::impl {
     // Uniform distribution number generator
-    template<std::integral I>
+    template<rsa::integral I>
     class RandomGenerator {
       private:
         std::mt19937 gen_;
@@ -30,7 +32,7 @@ namespace rsa::impl {
     // Generates a triplet (n, q, k) where n is the prime candidate
     // n is guaranteed to be odd
     // q and k are such that n-1 = q * 2^k with q odd
-    template<std::integral I>
+    template<rsa::integral I>
     std::tuple<I, I, I> generate_prime_candidate(RandomGenerator<I>& distrib) {
         while (true) {
             I n = distrib();
@@ -50,7 +52,7 @@ namespace rsa::impl {
     }
 
     // Generates a random prime number within the [floor, ceiling] range
-    template<std::integral I>
+    template<rsa::integral I>
     I generate_random_prime(I floor, I ceiling, std::optional<int> seed = std::nullopt) {
         auto distrib = RandomGenerator<I>{floor, ceiling, seed};
 
@@ -73,7 +75,7 @@ namespace rsa::impl {
     // Generates a pair of distinct random prime numbers within the [floor, ceiling] range
     // This function is useful for ensuring that the two primes are distinct, which is
     // crucial for the RSA key generation algorithm
-    template<std::integral I>
+    template<rsa::integral I>
     std::pair<I, I> generate_random_pair_of_distinct_primes(I floor, I ceiling) {
         I prime1 = rsa::impl::generate_random_prime(floor, ceiling);
 
@@ -86,7 +88,7 @@ namespace rsa::impl {
     }
 
     // Generates a number which is coprime with n in the range [2, n-1]
-    template<std::integral I>
+    template<rsa::integral I>
     I generate_random_coprime(I n, std::optional<int> seed = std::nullopt) {
         if (not seed) {
             std::random_device dev;
@@ -107,7 +109,7 @@ namespace rsa::impl {
 
 // RSA: R. Rivest, A. Shamir, L. Adleman
 namespace rsa {
-    template<std::integral I>
+    template<rsa::integral I>
     std::tuple<I, I, I> keygen() {
         I floor = 10;
         I ceiling = static_cast<I>(std::pow(std::numeric_limits<I>::max(), 0.25));
@@ -119,12 +121,12 @@ namespace rsa {
         return {n, pub, prv};
     }
 
-    template<std::integral I>
+    template<rsa::integral I>
     auto encode(I plaintext, I pub, I n) {
         return impl::power_semigroup(plaintext, pub, impl::modulo_multiply<I>{n});
     }
 
-    template<std::integral I>
+    template<rsa::integral I>
     auto decode(I cyphertext, I prv, I n) {
         return impl::power_semigroup(cyphertext, prv, impl::modulo_multiply<I>{n});
     }

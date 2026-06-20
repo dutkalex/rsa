@@ -3,12 +3,14 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <ranges>
 #include <span>
 #include <string>
 #include <vector>
 
+#include "concepts.hpp"
+
 namespace rsa::impl {
+    // Copies the binary representation of value into dest, producing a little endian representation
     template<std::unsigned_integral U>
     void little_endian_copy(std::span<std::byte> dest, U value) {
         for (int i = 0; i < std::min(sizeof(U), dest.size()); ++i) {
@@ -46,6 +48,7 @@ namespace rsa::impl {
         }
     }
 
+    // Flip the sign of a little endian two's complement representation by inverting all the bits and then adding 1
     inline void le_tc_negate(std::span<std::byte> arg) {
         for (auto it = arg.begin(); it != arg.end(); ++it) {
             auto v = ~std::to_integer<unsigned>(*it);
@@ -64,6 +67,7 @@ namespace rsa::impl {
 namespace rsa {
     // A signed integer class for storing large integers
     // The size is customizable and defaults to 256 bits
+    // This type is regular and has value semantics
     // Values are represented using little endian two's complement
     template<std::size_t N = 32>
     class bigint {
@@ -108,6 +112,7 @@ namespace rsa {
             impl::little_endian_copy(raw_, static_cast<std::make_unsigned_t<I>>(value));
         }
 
+        // Only there for consistency with unary minus
         friend bigint operator+(bigint const& arg) {
             bigint copy = arg;
             return copy;
@@ -194,4 +199,8 @@ namespace rsa {
             return retval;
         }
     };
+
 }  // namespace rsa
+
+static_assert(std::regular<rsa::bigint<>>);
+static_assert(rsa::integral<rsa::bigint<>>);
