@@ -45,6 +45,20 @@ namespace rsa::impl {
             ++wit;
         }
     }
+
+    inline void le_tc_negate(std::span<std::byte> arg) {
+        for (auto it = arg.begin(); it != arg.end(); ++it) {
+            auto v = ~std::to_integer<unsigned>(*it);
+            *it = static_cast<std::byte>(v);
+        }
+
+        unsigned carry = 1;
+        for (auto it = arg.begin(); it != arg.end(); ++it) {
+            auto v = std::to_integer<unsigned>(*it) + carry;
+            *it = static_cast<std::byte>(v & 0xff);
+            carry = v >> 8;
+        }
+    }
 }  // namespace rsa::impl
 
 namespace rsa {
@@ -63,16 +77,7 @@ namespace rsa {
         [[nodiscard]] std::array<std::byte, N> magnitude() const {
             std::array<std::byte, N> mag = raw_;
             if (is_negative()) {
-                for (int i = 0; i < N; ++i) {
-                    mag[i] = static_cast<std::byte>(~std::to_integer<unsigned>(mag[i]));
-                }
-
-                unsigned carry = 1;
-                for (int i = 0; i < N; ++i) {
-                    auto v = std::to_integer<unsigned>(mag[i]) + carry;
-                    mag[i] = static_cast<std::byte>(v & 0xff);
-                    carry = v >> 8;
-                }
+                impl::le_tc_negate(mag);
             }
             return mag;
         }
@@ -94,15 +99,38 @@ namespace rsa {
             impl::little_endian_copy(raw_, static_cast<std::make_unsigned_t<I>>(value));
         }
 
-        bigint& operator+=(bigint const& other) {
-            impl::le_tc_add(raw_, other.raw_, raw_);
-            return *this;
+        friend bigint operator+(bigint const& arg) {
+            bigint copy = arg;
+            return copy;
+        }
+
+        friend bigint operator-(bigint const& arg) {
+            bigint copy = arg;
+            impl::le_tc_negate(copy.raw_);
+            return copy;
         }
 
         friend bigint operator+(bigint const& lhs, bigint const& rhs) {
             bigint sum;
             impl::le_tc_add(lhs.raw_, rhs.raw_, sum.raw_);
             return sum;
+        }
+
+        friend bigint operator-(bigint const& lhs, bigint const& rhs) {
+            bigint diff = -rhs;
+            impl::le_tc_add(lhs.raw_, diff.raw_, diff.raw_);
+            return diff;
+        }
+
+        bigint& operator+=(bigint const& other) {
+            impl::le_tc_add(raw_, other.raw_, raw_);
+            return *this;
+        }
+
+        bigint& operator-=(bigint const& other) {
+            bigint tmp = -other;
+            impl::le_tc_add(raw_, tmp.raw_, raw_);
+            return *this;
         }
 
         [[nodiscard]] std::string to_string() const {

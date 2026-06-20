@@ -51,5 +51,17 @@ int main(){
         return 8;
     }
 
+    i = j - rsa::bigint{305};
+    if (i.to_string() != "92448"){
+        std::println("i={}", i.to_string());
+        return 9;
+    }
+
+    k -= rsa::bigint{52};
+    if (k.to_string() != "-100"){
+        std::println("k={}", k.to_string());
+        return 10;
+    }
+
     return 0;
 }
