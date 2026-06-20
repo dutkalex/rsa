@@ -16,6 +16,35 @@ namespace rsa::impl {
             value >>= 8;
         }
     }
+
+    // Computes "out = lhs + rhs" with the three parameters being little endian two's complement integers
+    // lhs, rhs and out are not required to be the same length. If the sum does not fit, the last bytes are discarded.
+    // lhs, rhs out out can alias to perform in-place updates and/or self-summation, but can't overlap
+    inline void le_tc_add(std::span<std::byte const> lhs, std::span<std::byte const> rhs, std::span<std::byte> out) {
+        auto lit = lhs.begin();
+        auto rit = rhs.begin();
+        auto wit = out.begin();
+        unsigned carry = 0;
+
+        while (wit != out.end()) {
+            unsigned lv = 0;
+            if (lit != lhs.end()) {
+                lv = std::to_integer<unsigned>(*lit);
+                ++lit;
+            }
+
+            unsigned rv = 0;
+            if (rit != rhs.end()) {
+                rv = std::to_integer<unsigned>(*rit);
+                ++rit;
+            }
+
+            unsigned sum = lv + rv + carry;
+            *wit = static_cast<std::byte>(sum & 0xff);
+            carry = sum >> 8;
+            ++wit;
+        }
+    }
 }  // namespace rsa::impl
 
 namespace rsa {
@@ -34,7 +63,7 @@ namespace rsa {
         [[nodiscard]] std::array<std::byte, N> magnitude() const {
             std::array<std::byte, N> mag = raw_;
             if (is_negative()) {
-                for (int i = 0; i < N; ++i){
+                for (int i = 0; i < N; ++i) {
                     mag[i] = static_cast<std::byte>(~std::to_integer<unsigned>(mag[i]));
                 }
 
@@ -49,6 +78,8 @@ namespace rsa {
         }
 
       public:
+        bigint() = default;
+
         template<std::unsigned_integral U>
             requires(sizeof(U) <= N)
         bigint(U value) {
@@ -63,11 +94,22 @@ namespace rsa {
             impl::little_endian_copy(raw_, static_cast<std::make_unsigned_t<I>>(value));
         }
 
+        bigint& operator+=(bigint const& other) {
+            impl::le_tc_add(raw_, other.raw_, raw_);
+            return *this;
+        }
+
+        friend bigint operator+(bigint const& lhs, bigint const& rhs) {
+            bigint sum;
+            impl::le_tc_add(lhs.raw_, rhs.raw_, sum.raw_);
+            return sum;
+        }
+
         [[nodiscard]] std::string to_string() const {
             bool const neg = is_negative();
             auto const mag = magnitude();
 
-            std::vector<std::uint8_t> digits; // LE decimal digit sequence
+            std::vector<std::uint8_t> digits;  // LE decimal digit sequence
             digits.push_back(0);
 
             for (auto it = mag.rbegin(); it != mag.rend(); ++it) {
@@ -94,7 +136,7 @@ namespace rsa {
             if (neg) {
                 retval.push_back('-');
             }
-            for (auto it = digits.rbegin(); it != digits.rend(); ++it){
+            for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
                 retval.push_back(static_cast<char>('0' + *it));
             }
             return retval;

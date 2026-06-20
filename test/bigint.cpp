@@ -21,17 +21,34 @@ int main(){
         return 3;
     }
 
+    i = i2 + i3;
+    if (i.to_string() != "252"){
+        std::println("i={}", i.to_string());
+        return 4;
+    }
+
+    i += i2;
+    if (i.to_string() != "552"){
+        std::println("i={}", i.to_string());
+        return 5;
+    }
 
     auto j = rsa::bigint{uint64_t{92753}};
     if (j.to_string() != "92753"){
         std::println("j={}", j.to_string());
-        return 4;
+        return 6;
     }
 
     auto k = rsa::bigint{int16_t{-48}};
     if (k.to_string() != "-48"){
         std::println("k={}", k.to_string());
-        return 5;
+        return 7;
+    }
+
+    i = i + j;
+    if (i.to_string() != "93305"){
+        std::println("i={}", i.to_string());
+        return 8;
     }
 
     return 0;
