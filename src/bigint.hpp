@@ -6,6 +6,7 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "concepts.hpp"
 
@@ -60,6 +61,29 @@ namespace rsa::impl {
             auto v = std::to_integer<unsigned>(*it) + carry;
             *it = static_cast<std::byte>(v & 0xff);
             carry = v >> 8;
+        }
+    }
+
+    // Computes "out = lhs * rhs" with the three parameters being little endian unsigned integers
+    // lhs, rhs and out are not required to be the same length. If the product does not fit, the last bytes are discarded.
+    // lhs and rhs can alias or overlap, but out must have exclusive access to its bytes
+    inline void le_unsigned_multiply(std::span<std::byte const> lhs, std::span<std::byte const> rhs, std::span<std::byte> out) {
+        std::fill(out.begin(), out.end(), std::byte{0x00});
+
+        int const Nl = lhs.size();
+        int const Nr = rhs.size();
+        int const No = out.size();
+        for (int i = 0; i < Nl; ++i) {
+            for (int j = 0; j < Nr; ++j) {
+                auto carry = std::to_integer<unsigned>(lhs[i]) * std::to_integer<unsigned>(rhs[j]);
+                int k = i+j;
+                while (carry > 0 and k < No){
+                    auto v = std::to_integer<unsigned>(out[k]) + carry;
+                    out[k] = static_cast<std::byte>(v & 0xff);
+                    carry = v >> 8;
+                    ++k;
+                }
+            }
         }
     }
 }  // namespace rsa::impl
@@ -136,6 +160,18 @@ namespace rsa {
             return diff;
         }
 
+        friend bigint operator*(bigint const& lhs, bigint const& rhs){
+            auto lhs_mag = lhs.magnitude();
+            auto rhs_mag = rhs.magnitude();
+
+            bigint prod;
+            impl::le_unsigned_multiply(lhs_mag, rhs_mag, prod.raw_);
+            if (lhs.is_negative() xor rhs.is_negative()){
+                impl::le_tc_negate(prod.raw_);
+            }
+            return prod;
+        }
+
         bigint& operator+=(bigint const& other) {
             impl::le_tc_add(raw_, other.raw_, raw_);
             return *this;
@@ -144,6 +180,12 @@ namespace rsa {
         bigint& operator-=(bigint const& other) {
             bigint tmp = -other;
             impl::le_tc_add(raw_, tmp.raw_, raw_);
+            return *this;
+        }
+
+        bigint& operator*=(bigint const& other){
+            bigint tmp = (*this) * other;
+            *this = tmp;
             return *this;
         }
 

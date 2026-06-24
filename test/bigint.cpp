@@ -73,5 +73,29 @@ int main() {
         return 10;
     }
 
+    auto a = rsa::bigint{100} * rsa::bigint{4};
+    if (a.to_string() != "400") {
+        std::println("a={}", a.to_string());
+        return 11;
+    }
+
+    a = rsa::bigint{-12} * rsa::bigint{4};
+    if (a.to_string() != "-48") {
+        std::println("a={}", a.to_string());
+        return 12;
+    }
+
+    a *= rsa::bigint{-2};
+    if (a.to_string() != "96") {
+        std::println("a={}", a.to_string());
+        return 13;
+    }
+
+    a = rsa::bigint{500000} * rsa::bigint{4000000};
+    if (a.to_string() != "2000000000000"){
+        std::println("a={}", a.to_string());
+        return 14;
+    }
+
     return 0;
 }
