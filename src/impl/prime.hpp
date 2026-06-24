@@ -6,7 +6,7 @@
 namespace rsa::impl {
     // Computes the smallest divisor of n by brute force
     // Assumes n > 0
-    template<std::integral I>
+    template<rsa::integral I>
     I smallest_divisor(I n) {
         if (n % I{2} == 0) {
             return I{2};
@@ -22,7 +22,7 @@ namespace rsa::impl {
     }
 
     // Determines whether n is prime by brute force
-    template<std::integral I>
+    template<rsa::integral I>
     bool is_prime(I n) {
         return n > I{1} and smallest_divisor(n) == n;
     }
@@ -31,7 +31,7 @@ namespace rsa::impl {
     // The witness is a random value which will be used to test the identity w^(n-1) = 1 mod n
     // for any w if n is prime
     // Assumes 0 < witness < n
-    template<std::integral I>
+    template<rsa::integral I>
     bool fermat_test(I n, I witness) {
         return power_semigroup(witness, n - 1, modulo_multiply<I>{n}) == I{1};
     }
@@ -45,7 +45,7 @@ namespace rsa::impl {
     // n must be odd and greater than 1
     // q and k must be such that n-1 = q * 2^k, with q odd
     // Assumes 0 < witness < n
-    template<std::integral I>
+    template<rsa::integral I>
     bool miller_rabin_test(I n, I q, I k, I witness) {
         auto op = modulo_multiply<I>{n};
         I x = power_semigroup(witness, q, op);
