@@ -6,7 +6,8 @@ This is a toy project inspired by [Alex Stepanov's lectures](https://www.youtube
 - [x] implement public/private key generation
 - [x] implement encoding/decoding function
 - [x] implement the `rsa::bigint` arbitrary precision integer class
-- [ ] implement large integer arithmetic
+- [x] implement large integer arithmetic
 - [ ] generalize keygen to support `rsa::bigint`
 - [ ] extend encoding/decoding to arbitrary streams of bytes
 - [ ] implement on the fly compression/decompression
+- [ ] decouple storage policy from `rsa::bigint` implementation
