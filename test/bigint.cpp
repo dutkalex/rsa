@@ -97,5 +97,40 @@ int main() {
         return 14;
     }
 
+    auto q = rsa::bigint{100} / rsa::bigint{4};
+    auto r = rsa::bigint{100} % rsa::bigint{4};
+    if (q.to_string() != "25" or r.to_string() != "0"){
+        std::println("q={} r={}", q.to_string(), r.to_string());
+        return 15;
+    }
+
+    q = rsa::bigint{10000} / rsa::bigint{300};
+    r = rsa::bigint{10000} % rsa::bigint{300};
+    if (q.to_string() != "33" or r.to_string() != "100"){
+        std::println("q={} r={}", q.to_string(), r.to_string());
+        return 16;
+    }
+
+    q = rsa::bigint{-10000} / rsa::bigint{300};
+    r = rsa::bigint{-10000} % rsa::bigint{300};
+    if (q.to_string() != "-33" or r.to_string() != "-100"){
+        std::println("q={} r={}", q.to_string(), r.to_string());
+        return 17;
+    }
+
+    q = rsa::bigint{-10000} / rsa::bigint{-300};
+    r = rsa::bigint{-10000} % rsa::bigint{-300};
+    if (q.to_string() != "33" or r.to_string() != "-100"){
+        std::println("q={} r={}", q.to_string(), r.to_string());
+        return 18;
+    }
+
+    q = rsa::bigint{10000} / rsa::bigint{-300};
+    r = rsa::bigint{10000} % rsa::bigint{-300};
+    if (q.to_string() != "-33" or r.to_string() != "100"){
+        std::println("q={} r={}", q.to_string(), r.to_string());
+        return 19;
+    }
+
     return 0;
 }
