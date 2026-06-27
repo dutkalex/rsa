@@ -1,5 +1,5 @@
 ---
-Checks:          '*,-modernize-use-trailing-return-type,-llvmlibc-*,-fuchsia-*,-altera-*,-hicpp-special-member-functions'
+Checks:          '*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-llvmlibc-*,-fuchsia-*,-altera-*,-hicpp-special-member-functions'
 WarningsAsErrors: ''
 UseColor: true
 HeaderFileExtensions:

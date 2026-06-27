@@ -3,10 +3,8 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <span>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "concepts.hpp"
 #include "impl/little_endian_arithmetic.hpp"
@@ -191,9 +189,9 @@ namespace rsa {
                 int carry = std::to_integer<int>(*it);
 
                 for (size_t i = 0; i < digits.size(); ++i) {
-                    int x = digits[i] * 256 + carry;
-                    digits[i] = x % 10;
-                    carry = x / 10;
+                    int tmp = digits[i] * 256 + carry;
+                    digits[i] = tmp % 10;
+                    carry = tmp / 10;
                 }
 
                 while (carry != 0) {

@@ -6,10 +6,9 @@
 #include <utility>
 
 #include "concepts.hpp"
-#include "bigint.hpp"
-#include "impl/power.hpp"
 #include "impl/gcd.hpp"
 #include "impl/modulo_multiply.hpp"
+#include "impl/power.hpp"
 #include "impl/prime.hpp"
 
 namespace rsa::impl {
