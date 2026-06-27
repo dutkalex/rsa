@@ -6,26 +6,38 @@
 #include <utility>
 
 #include "concepts.hpp"
-
+#include "bigint.hpp"
 #include "impl/power.hpp"
 #include "impl/gcd.hpp"
 #include "impl/modulo_multiply.hpp"
 #include "impl/prime.hpp"
 
 namespace rsa::impl {
-    // Uniform distribution number generator
+    // Uniform distribution positive number generator
     template<rsa::integral I>
     class RandomGenerator {
       private:
         std::mt19937 gen_;
-        std::uniform_int_distribution<I> distrib_;
+        std::uniform_int_distribution<std::uint8_t> distrib_;
+        I floor_;
+        I ceiling_;
 
       public:
+        // Precondition: floor and ceiling must be positive, with ceiling > floor
         RandomGenerator(I floor, I ceiling, std::optional<int> seed = std::nullopt)
-            : gen_{seed ? *seed : std::random_device{}()}, distrib_{floor, ceiling} {}
+            : gen_{seed ? *seed : std::random_device{}()}, distrib_{0x00, 0xff}, floor_{floor}, ceiling_{ceiling} {}
 
         I operator()() {
-            return distrib_(gen_);
+            I result = 0;
+            result += I{distrib_(gen_) / 2};  // ensures result > 0
+            for (std::size_t i = 1; i < sizeof(I); ++i) {
+                result *= I{256};
+                result += I{distrib_(gen_)};
+            }
+
+            result %= result % (ceiling_ - floor_);
+            result += floor_;
+            return result;
         }
     };
 
@@ -95,11 +107,10 @@ namespace rsa::impl {
             seed = dev();
         }
 
-        std::mt19937 gen(seed.value());
-        std::uniform_int_distribution<> distr(2, n - 1);
+        auto distr = rsa::impl::RandomGenerator<I>{2, n - 1, seed};
 
         while (true) {
-            I candidate = distr(gen);
+            I candidate = distr();
             if (gcd(n, candidate) == 1) {
                 return candidate;
             }
@@ -109,16 +120,15 @@ namespace rsa::impl {
 
 // RSA: R. Rivest, A. Shamir, L. Adleman
 namespace rsa {
-    template<rsa::integral I>
-    std::tuple<I, I, I> keygen() {
-        I floor = 10;
-        I ceiling = static_cast<I>(std::pow(std::numeric_limits<I>::max(), 0.25));
-        auto [prime1, prime2] = impl::generate_random_pair_of_distinct_primes(floor, ceiling);
-        I n = prime1 * prime2;
-        I phi_n = (prime1 - 1) * (prime2 - 1);
-        I pub = impl::generate_random_coprime(phi_n);
-        I prv = impl::multiplicative_inverse(pub, phi_n).value();
-        return {n, pub, prv};
+    template<rsa::integral BigInt, rsa::integral I = int>
+        requires(sizeof(BigInt) >= 4 * sizeof(I))  // ensures that there is no overflow
+    std::tuple<BigInt, BigInt, BigInt> keygen(I floor = 10, I ceiling = 100000) {
+        auto [prime1, prime2] = impl::generate_random_pair_of_distinct_primes(BigInt{floor}, BigInt{ceiling});
+        BigInt n = prime1 * prime2;
+        BigInt phi_n = (prime1 - 1) * (prime2 - 1);
+        BigInt pub = impl::generate_random_coprime(phi_n);
+        BigInt prv = impl::multiplicative_inverse(pub, phi_n).value();
+        return std::tuple{n, pub, prv};
     }
 
     template<rsa::integral I>

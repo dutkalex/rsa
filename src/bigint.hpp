@@ -14,9 +14,13 @@ namespace rsa::impl {
     // Copies the binary representation of value into dest, producing a little endian representation
     template<std::unsigned_integral U>
     void little_endian_copy(std::span<std::byte> dest, U value) {
-        for (int i = 0; i < std::min(sizeof(U), dest.size()); ++i) {
-            dest[i] = static_cast<std::byte>(value & 0xff);
-            value >>= 8;
+        if constexpr (sizeof(U) == 1) {
+            dest[0] = static_cast<std::byte>(value);
+        } else {
+            for (int i = 0; i < std::min(sizeof(U), dest.size()); ++i) {
+                dest[i] = static_cast<std::byte>(value & 0xff);
+                value >>= 8;
+            }
         }
     }
 
