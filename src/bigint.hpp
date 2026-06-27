@@ -118,7 +118,7 @@ namespace rsa::impl {
         le_tc_negate(minus_rhs);
 
         for (int i = 0; i < bits; ++i) {
-            int k = bits-1-i;
+            int k = bits - 1 - i;
             shift_left(remainder);
 
             if (get_bit(lhs, k)) {
@@ -276,6 +276,16 @@ namespace rsa {
         bigint& operator%=(bigint const& other) {
             bigint tmp = (*this) % other;
             *this = tmp;
+            return *this;
+        }
+
+        bigint& operator++() {
+            *this += 1;
+            return *this;
+        }
+
+        bigint& operator--() {
+            *this -= 1;
             return *this;
         }
 
