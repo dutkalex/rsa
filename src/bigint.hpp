@@ -17,7 +17,7 @@ namespace rsa::impl {
         if constexpr (sizeof(U) == 1) {
             dest[0] = static_cast<std::byte>(value);
         } else {
-            for (int i = 0; i < std::min(sizeof(U), dest.size()); ++i) {
+            for (std::size_t i = 0; i < std::min(sizeof(U), dest.size()); ++i) {
                 dest[i] = static_cast<std::byte>(value & 0xff);
                 value >>= 8;
             }
@@ -121,7 +121,7 @@ namespace rsa::impl {
         std::array<std::byte, N> minus_rhs = rhs;
         le_tc_negate(minus_rhs);
 
-        for (int i = 0; i < bits; ++i) {
+        for (std::size_t i = 0; i < bits; ++i) {
             int k = bits - 1 - i;
             shift_left(remainder);
 
