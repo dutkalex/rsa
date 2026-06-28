@@ -1,9 +1,10 @@
 #include <print>
 
 #include "rsa.hpp"
+#include "bigint.hpp"
 
 int main(){
-    auto [n, pub, prv] = rsa::keygen<rsa::bigint<16>>();
+    auto [n, pub, prv] = rsa::keygen<rsa::bigint<16>, rsa::bigint<4>>();
     std::println("pub={} prv={} n={}", pub.to_string(), prv.to_string(), n.to_string());
 
     auto gen = rsa::impl::RandomGenerator<rsa::bigint<16>>(0, n-1);

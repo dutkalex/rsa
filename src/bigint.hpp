@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstring>
@@ -40,6 +41,9 @@ namespace rsa {
             return mag;
         }
 
+        template<std::size_t M>
+        friend class bigint;
+
       public:
         bigint() = default;
 
@@ -55,6 +59,13 @@ namespace rsa {
         bigint(I value) {
             raw_.fill(value < 0 ? std::byte{0xff} : std::byte{0x00});
             impl::little_endian_copy(raw_, static_cast<std::make_unsigned_t<I>>(value));
+        }
+
+        template<std::size_t M>
+            requires(M < N)
+        bigint(bigint<M> const& smaller){
+            raw_.fill(smaller < 0 ? std::byte{0xff} : std::byte{0x00});
+            std::copy_n(smaller.raw_.begin(), M, raw_.begin());
         }
 
         // Only there for consistency with unary minus
