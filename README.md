@@ -7,7 +7,10 @@ This is a toy project inspired by [Alex Stepanov's lectures](https://www.youtube
 - [x] implement encoding/decoding function
 - [x] implement the `rsa::bigint` arbitrary precision integer class
 - [x] implement large integer arithmetic
+- [x] implement large integer random number generation
 - [x] generalize keygen to support `rsa::bigint`
+- [ ] generalize `rsa::impl::le_unsigned_divide` to variable length encodings
+- [ ] optimize arithmetic for very large integers (Knuth algorithm D)
+- [ ] decouple storage policy from `rsa::bigint` implementation
 - [ ] extend encoding/decoding to arbitrary streams of bytes
 - [ ] implement on the fly compression/decompression
-- [ ] decouple storage policy from `rsa::bigint` implementation
