@@ -21,7 +21,7 @@ namespace rsa::impl {
 
         I operator()() {
             I result = 0;
-            result += I{distrib_(gen_) / 2};  // ensures result > 0
+            result += static_cast<I>(distrib_(gen_) / 2);  // ensures result > 0
             for (std::size_t i = 1; i < sizeof(I); ++i) {
                 result *= I{256};
                 result += I{distrib_(gen_)};
