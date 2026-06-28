@@ -1,45 +1,16 @@
 #pragma once
 
 #include <optional>
-#include <random>
 #include <tuple>
-#include <utility>
 
 #include "concepts.hpp"
 #include "impl/gcd.hpp"
 #include "impl/modulo_multiply.hpp"
 #include "impl/power.hpp"
 #include "impl/prime.hpp"
+#include "impl/generator.hpp"
 
 namespace rsa::impl {
-    // Uniform distribution positive number generator
-    template<rsa::integral I>
-    class RandomGenerator {
-      private:
-        std::mt19937 gen_;
-        std::uniform_int_distribution<std::uint8_t> distrib_;
-        I floor_;
-        I ceiling_;
-
-      public:
-        // Precondition: floor and ceiling must be positive, with ceiling > floor
-        RandomGenerator(I floor, I ceiling, std::optional<int> seed = std::nullopt)
-            : gen_{seed ? *seed : std::random_device{}()}, distrib_{0x00, 0xff}, floor_{floor}, ceiling_{ceiling} {}
-
-        I operator()() {
-            I result = 0;
-            result += I{distrib_(gen_) / 2};  // ensures result > 0
-            for (std::size_t i = 1; i < sizeof(I); ++i) {
-                result *= I{256};
-                result += I{distrib_(gen_)};
-            }
-
-            result %= result % (ceiling_ - floor_);
-            result += floor_;
-            return result;
-        }
-    };
-
     // Generates a triplet (n, q, k) where n is the prime candidate
     // n is guaranteed to be odd
     // q and k are such that n-1 = q * 2^k with q odd
@@ -83,21 +54,6 @@ namespace rsa::impl {
         }
     }
 
-    // Generates a pair of distinct random prime numbers within the [floor, ceiling] range
-    // This function is useful for ensuring that the two primes are distinct, which is
-    // crucial for the RSA key generation algorithm
-    template<rsa::integral I>
-    std::pair<I, I> generate_random_pair_of_distinct_primes(I floor, I ceiling) {
-        I prime1 = rsa::impl::generate_random_prime(floor, ceiling);
-
-        I prime2 = prime1;
-        while (prime2 == prime1) {
-            prime2 = rsa::impl::generate_random_prime(floor, ceiling);
-        }
-
-        return std::pair{prime1, prime2};
-    }
-
     // Generates a number which is coprime with n in the range [2, n-1]
     template<rsa::integral I>
     I generate_random_coprime(I n, std::optional<int> seed = std::nullopt) {
@@ -122,7 +78,11 @@ namespace rsa {
     template<rsa::integral BigInt, rsa::integral I = int>
         requires(sizeof(BigInt) >= 4 * sizeof(I))  // ensures that there is no overflow
     std::tuple<BigInt, BigInt, BigInt> keygen(I floor = 10, I ceiling = 100000) {
-        auto [prime1, prime2] = impl::generate_random_pair_of_distinct_primes(BigInt{floor}, BigInt{ceiling});
+        BigInt prime1 = rsa::impl::generate_random_prime(floor, ceiling);
+        BigInt prime2 = prime1;
+        while (prime2 == prime1) {
+            prime2 = rsa::impl::generate_random_prime(floor, ceiling);
+        }
         BigInt n = prime1 * prime2;
         BigInt phi_n = (prime1 - 1) * (prime2 - 1);
         BigInt pub = impl::generate_random_coprime(phi_n);
