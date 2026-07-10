@@ -77,35 +77,39 @@ namespace rsa::impl {
 
 // RSA: R. Rivest, A. Shamir, L. Adleman
 namespace rsa {
-    template<rsa::integral BigInt>
+    // Represents an RSA key
+    // pub and prv are multiplicative inverses modulo n
+    template<rsa::integral I>
     struct Key {
-        BigInt n;
-        BigInt pub;
-        BigInt prv;
+        I n;
+        I pub;
+        I prv;
     };
 
-    template<rsa::integral BigInt>
-    std::optional<Key<BigInt>> keygen(std::size_t prime_size) {
-        if (sizeof(BigInt) * 2 < prime_size) {  // overflows can happen
+    // Generates an RSA key using primes with prime_size binary digits
+    // The template parameter I represents the integral type to use
+    // If I is not big enough to safely perform the RSA arithmetic, an std::nullopt is returned.
+    template<rsa::integral I>
+    std::optional<Key<I>> keygen(std::size_t prime_size) {
+        if (prime_size + 1 > sizeof(I) * 2) {  // the generated values can't be safely raised to the 4th power
+            std::println("{}+1 > {}*2", prime_size, sizeof(I));
             return std::nullopt;
         }
 
-        BigInt floor = BigInt{1};
-        for (int i = 0; i < prime_size - 1; ++i) {
-            floor *= 2;
-        }
-        BigInt ceiling = floor * 2 - 1;
+        I floor = I{1} << (prime_size - 1);
+        I ceiling = (floor << 1) - 1;
 
-        BigInt prime1 = rsa::impl::generate_random_prime(floor, ceiling);
-        BigInt prime2 = prime1;
+        I prime1 = rsa::impl::generate_random_prime(floor, ceiling);
+        I prime2 = prime1;
         while (prime2 == prime1) {
             prime2 = rsa::impl::generate_random_prime(floor, ceiling);
         }
-        BigInt n = prime1 * prime2;
-        BigInt phi_n = (prime1 - 1) * (prime2 - 1);
-        BigInt pub = impl::generate_random_coprime(phi_n);
-        BigInt prv = impl::multiplicative_inverse(pub, phi_n).value();
-        return Key<BigInt>{n, pub, prv};
+
+        I n = prime1 * prime2;
+        I phi_n = (prime1 - 1) * (prime2 - 1);
+        I pub = impl::generate_random_coprime(phi_n);
+        I prv = impl::multiplicative_inverse(pub, phi_n).value();
+        return Key<I>{n, pub, prv};
     }
 
     template<rsa::integral I>

@@ -132,5 +132,12 @@ int main() {
         return 19;
     }
 
+    i = rsa::bigint{1} << 3;
+    j = rsa::bigint{4} << 12;
+    if (i.to_string() != "8" or j.to_string() != "16384"){
+        std::println("(i={} j={}", i.to_string(), j.to_string());
+        return 20;
+    }
+
     return 0;
 }

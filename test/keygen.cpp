@@ -6,7 +6,7 @@
 int test_native_integers() {
     int err_count = 0;
 
-    if (auto opt_key = rsa::keygen<std::int64_t>(16)) {
+    if (auto opt_key = rsa::keygen<std::int64_t>(8)) {
         rsa::Key<std::int64_t> key = *opt_key;
         std::println("pub={} prv={} n={}", key.pub, key.prv, key.n);
 
@@ -38,7 +38,7 @@ int test_native_integers() {
 
 int test_bigint() {
     int err_count = 0;
-    if (auto opt_key = rsa::keygen<rsa::bigint<64>>(16)) {
+    if (auto opt_key = rsa::keygen<rsa::bigint<64>>(8)) {
         rsa::Key<rsa::bigint<64>> key = *opt_key;
         std::println("pub={} prv={} n={}", key.pub.to_string(), key.prv.to_string(), key.n.to_string());
 

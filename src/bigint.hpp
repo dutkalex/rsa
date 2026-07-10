@@ -63,7 +63,7 @@ namespace rsa {
 
         template<std::size_t M>
             requires(M < N)
-        bigint(bigint<M> const& smaller){
+        bigint(bigint<M> const& smaller) {
             raw_.fill(smaller < 0 ? std::byte{0xff} : std::byte{0x00});
             std::copy_n(smaller.raw_.begin(), M, raw_.begin());
         }
@@ -172,6 +172,18 @@ namespace rsa {
         bigint& operator--() {
             *this -= 1;
             return *this;
+        }
+
+        friend bigint operator<<(bigint const& value, std::size_t n) {
+            std::size_t n_bytes = n / 8;
+            bigint res = 0;
+            unsigned carry = 0;
+            for (std::size_t i = 0; i < N - n_bytes; ++i) {
+                carry += std::to_integer<unsigned>(value.raw_[i]) << (n % 8);
+                res.raw_[i + n_bytes] = static_cast<std::byte>(carry & 0xff);
+                carry >>= 8;
+            }
+            return res;
         }
 
         friend std::strong_ordering operator<=>(bigint const& lhs, bigint const& rhs) {
