@@ -42,7 +42,9 @@ namespace rsa::impl {
             auto [n, q, k] = generate_prime_candidate(distrib);
 
             // Apply 100 times the Miller-Rabin test
-            auto witness_distrib = RandomGenerator<I>{I{2}, static_cast<I>(n - I{2}), seed.transform([](int s) { return s + 1; })};
+            auto witness_distrib = RandomGenerator<I>{I{2}, static_cast<I>(n - I{2}), seed.transform([](int s) {
+                                                          return s + 1;
+                                                      })};
             bool n_is_prime = true;
             for (int i = 0; i < 100 and n_is_prime; ++i) {
                 n_is_prime = miller_rabin_test(n, q, k, witness_distrib());
@@ -75,9 +77,25 @@ namespace rsa::impl {
 
 // RSA: R. Rivest, A. Shamir, L. Adleman
 namespace rsa {
-    template<rsa::integral BigInt, rsa::integral I>
-        requires(sizeof(BigInt) >= 4 * sizeof(I))  // ensures that there is no overflow
-    std::tuple<BigInt, BigInt, BigInt> keygen(I floor, I ceiling) {
+    template<rsa::integral BigInt>
+    struct Key {
+        BigInt n;
+        BigInt pub;
+        BigInt prv;
+    };
+
+    template<rsa::integral BigInt>
+    std::optional<Key<BigInt>> keygen(std::size_t prime_size) {
+        if (sizeof(BigInt) * 2 < prime_size) {  // overflows can happen
+            return std::nullopt;
+        }
+
+        BigInt floor = BigInt{1};
+        for (int i = 0; i < prime_size - 1; ++i) {
+            floor *= 2;
+        }
+        BigInt ceiling = floor * 2 - 1;
+
         BigInt prime1 = rsa::impl::generate_random_prime(floor, ceiling);
         BigInt prime2 = prime1;
         while (prime2 == prime1) {
@@ -87,7 +105,7 @@ namespace rsa {
         BigInt phi_n = (prime1 - 1) * (prime2 - 1);
         BigInt pub = impl::generate_random_coprime(phi_n);
         BigInt prv = impl::multiplicative_inverse(pub, phi_n).value();
-        return std::tuple{n, pub, prv};
+        return Key<BigInt>{n, pub, prv};
     }
 
     template<rsa::integral I>
