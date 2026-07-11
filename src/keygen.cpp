@@ -53,23 +53,39 @@ void dump_key_file(std::string_view n, std::string_view key, std::filesystem::pa
     out << key << '\n';
 }
 
+template<std::size_t N>
+bool try_keygen(std::size_t size) {
+    auto opt_key = rsa::keygen<rsa::bigint<N>>(size);
+    if (not opt_key) {
+        return false;
+    }
+
+    std::string n = opt_key->n.to_string();
+    std::string pub = opt_key->pub.to_string();
+    std::string prv = opt_key->prv.to_string();
+    std::println("n={} pub={} prv={}", n, pub, prv);
+    dump_key_file(n, pub, "rsa.pub");
+    dump_key_file(n, prv, "rsa.prv");
+    return true;
+}
+
 int main(int argc, const char* argv[]) {
     auto args = cmdline_args(argc, argv);
     auto opt_size = parse_input(args);
     if (not opt_size) {
         return 1;
     }
-    auto opt_key = rsa::keygen<rsa::bigint<32>>(*opt_size);
-    if (not opt_key) {
+
+    bool ok = try_keygen<32>(*opt_size);
+    if (not ok) {
+        ok = try_keygen<64>(*opt_size);
+    }
+    if (not ok) {
+        ok = try_keygen<128>(*opt_size);
+    }
+    if (not ok) {
         std::println("Error! Requested prime size is too large");
         return 2;
     }
-
-    std::string n = opt_key->n.to_string();
-    std::string pub =  opt_key->pub.to_string();
-    std::string prv =  opt_key->prv.to_string();
-    std::println("n={} pub={} prv={}", n, pub, prv);
-    dump_key_file(n, pub, "rsa.pub");
-    dump_key_file(n, prv, "rsa.prv");
     return 0;
 }

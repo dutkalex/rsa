@@ -5,10 +5,10 @@
 
 #include "concepts.hpp"
 #include "impl/gcd.hpp"
+#include "impl/generator.hpp"
 #include "impl/modulo_multiply.hpp"
 #include "impl/power.hpp"
 #include "impl/prime.hpp"
-#include "impl/generator.hpp"
 
 namespace rsa::impl {
     // Generates a triplet (n, q, k) where n is the prime candidate
@@ -92,7 +92,6 @@ namespace rsa {
     template<rsa::integral I>
     std::optional<Key<I>> keygen(std::size_t prime_size) {
         if (prime_size + 1 > sizeof(I) * 2) {  // the generated values can't be safely raised to the 4th power
-            std::println("{}+1 > {}*2", prime_size, sizeof(I));
             return std::nullopt;
         }
 
